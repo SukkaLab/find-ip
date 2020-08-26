@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <title>Search IP Geolocation | Sukka Lab</title>
+  <link rel="shortcut icon" type="image/ico" href="https://cdn.jsdelivr.net/npm/skx@0.0.1">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://cdn.jsdelivr.net/npm/skx@0.0.1/favicon/favicon-32x32.png">
+  <meta name="format-detection" content="telephone=no">
+  <style>
+    body {
+      padding: 20px
+    }
+
+
+    form {
+      position: relative;
+    }
+
+    input {
+      -webkit-appearance: none;
+      border: 1px solid #bbb;
+      border-radius: 0;
+      box-sizing: border-box;
+      display: block;
+      font-size: 16px;
+      height: 40px;
+      outline: 0;
+      padding: 4px 6px;
+      width: 100%;
+    }
+
+    .wrapper {
+      margin-right: 72px;
+    }
+
+    .submit {
+      background-color: #e7e7e7;
+      border: 1px solid #bbb;
+      border-left: 0;
+      border-radius: 0;
+      color: #222;
+      display: block;
+      font-size: 16px;
+      height: 40px;
+      outline: 0;
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 72px;
+    }
+
+    #result {
+      margin-top: 20px
+    }
+
+  </style>
+</head>
+
+<body>
+  <form id="form">
+    <div class="wrapper">
+      <input maxlength="20" placeholder="请输入 IP" id="ip" value="" type="search" required="">
+    </div>
+    <input class="submit" type="submit" value="搜索">
+  </form>
+
+  <div id="result"></div>
+
+  <script>
+    ((window, navigator, document) => {
+      const ipv4Regex = /^(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}$/;
+      const ipv6Regex = /^((?:[a-fA-F\d]{1,4}:){7}(?:[a-fA-F\d]{1,4}|:)|(?:[a-fA-F\d]{1,4}:){6}(?:${v4}|:[a-fA-F\d]{1,4}|:)|(?:[a-fA-F\d]{1,4}:){5}(?::${v4}|(:[a-fA-F\d]{1,4}){1,2}|:)|(?:[a-fA-F\d]{1,4}:){4}(?:(:[a-fA-F\d]{1,4}){0,1}:${v4}|(:[a-fA-F\d]{1,4}){1,3}|:)|(?:[a-fA-F\d]{1,4}:){3}(?:(:[a-fA-F\d]{1,4}){0,2}:${v4}|(:[a-fA-F\d]{1,4}){1,4}|:)|(?:[a-fA-F\d]{1,4}:){2}(?:(:[a-fA-F\d]{1,4}){0,3}:${v4}|(:[a-fA-F\d]{1,4}){1,5}|:)|(?:[a-fA-F\d]{1,4}:){1}(?:(:[a-fA-F\d]{1,4}){0,4}:${v4}|(:[a-fA-F\d]{1,4}){1,6}|:)|(?::((?::[a-fA-F\d]{1,4}){0,5}:${v4}|(?::[a-fA-F\d]{1,4}){1,7}|:)))(%[0-9a-zA-Z]{1,})?$/;
+      const isIPv4 = ip => ipv4Regex.test(ip);
+      const isIPv6 = ip => ipv6Regex.test(ip);
+
+      const msg = (...args) => {
+        document.getElementById('result').textContent = args.join(' ');
+      }
+
+      const get = (url = '', type = 'json') =>
+        fetch(url, { method: 'GET' }).then((resp) => {
+          return type === 'text'
+            ? Promise.all([resp.ok, resp.status, resp.text(), resp.headers])
+            : Promise.all([resp.ok, resp.status, resp.json(), resp.headers]);
+        }).then(([ok, status, data, headers]) => {
+          if (ok) {
+            return { ok, status, data, headers }
+          } else {
+            throw new Error(JSON.stringify(json.error));
+          }
+        }).catch(error => { throw error; });
+
+      document.getElementById('form').addEventListener('submit', evt => {
+        evt.preventDefault();
+
+        msg('');
+
+        const ip = document.getElementById('ip').value;
+
+        if (isIPv4(ip) || isIPv6(ip)) {
+          msg('查询中...');
+          get(`https://api.skk.moe/network/parseIp/ipip/v3/${ip}`, 'json')
+            .then(({ data }) => {
+              msg(data.join(' ').trim());
+            })
+            .catch(err => {
+              msg('IP 查询失败！');
+              console.error(err);
+            });
+        } else {
+          msg('不是合法的 IP！');
+        }
+      });
+    })(window, navigator, document);
+  </script>
+</body>
+
+</html>
